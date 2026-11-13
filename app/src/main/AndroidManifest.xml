@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Zero Internet Permission for 100% Offline Privacy -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <application
+        android:name=".TodoApplication"
+        android:allowBackup="false"
+        android:icon="@drawable/ic_logo"
+        android:roundIcon="@drawable/ic_logo"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.TodoList">
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.TodoList"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Offline Alarm Receiver -->
+        <receiver
+            android:name=".reminder.TaskAlarmReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.sami.todolist.ACTION_TRIGGER_REMINDER" />
+                <action android:name="com.sami.todolist.ACTION_COMPLETE_TASK" />
+                <action android:name="com.sami.todolist.ACTION_SNOOZE_TASK" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Restore Alarms on Device Reboot -->
+        <receiver
+            android:name=".reminder.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>
