@@ -26,7 +26,7 @@
 - **Zero Internet Permissions**: The application intentionally does not declare `android.permission.INTERNET`, providing guaranteed hardware-level privacy.
 - **No Cloud Dependencies**: Replaces Google Drive sync with local JSON backup and restore via Android's Storage Access Framework (SAF).
 - **No Paywalls or In-App Purchases**: All features (unlimited tasks, subtasks, checklists, reminders, and multi-themes) are permanently free and unlocked for everyone.
-- **Ultra Lightweight**: Highly optimized release build at only **1.17 MB**.
+- **Ultra Lightweight**: Highly optimized release build at only **1.18 MB**.
 
 ---
 
