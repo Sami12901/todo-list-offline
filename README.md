@@ -87,6 +87,7 @@ com.sami.todolist
 
 The pre-built release APK is available directly in the repository:
 - **Direct Download**: [`TODO_LIST_v1.0.0_Offline.apk`](TODO_LIST_v1.0.0_Offline.apk) (1.17 MB)
+- **Official Release**: [GitHub Releases v1.0.0](https://github.com/Sami12901/todo-list-offline/releases/tag/v1.0.0)
 
 ---
 
@@ -103,8 +104,8 @@ Output APK: `app/build/outputs/apk/release/app-release.apk`
 
 ---
 
-## Developer Credit
+## Author & Maintainer
 
-- **App Name**: TODO LIST
-- **Developer**: Sami
+- **Developer**: **MD. SAMI ISLAM** ([@Sami12901](https://github.com/Sami12901))
+- **Email**: `mdsamiislam2006@gmail.com`
 - **License**: [MIT License](LICENSE)
