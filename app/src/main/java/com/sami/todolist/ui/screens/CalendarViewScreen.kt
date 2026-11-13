@@ -209,8 +209,7 @@ fun CalendarViewScreen(
                         item = item,
                         onToggleTask = { viewModel.toggleTaskCompletion(item) },
                         onToggleSubtask = { viewModel.toggleSubtaskCompletion(it) },
-                        onClick = { onEditTask(item) },
-                        onDelete = { viewModel.deleteTask(item.task.id) }
+                        onClick = { onEditTask(item) }
                     )
                 }
             }

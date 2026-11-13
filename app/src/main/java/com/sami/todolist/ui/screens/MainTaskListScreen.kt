@@ -1,7 +1,6 @@
 package com.sami.todolist.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -28,11 +27,19 @@ import com.sami.todolist.data.dao.TaskWithDetails
 import com.sami.todolist.data.entity.SubTaskEntity
 import com.sami.todolist.data.entity.TaskCategoryEntity
 import com.sami.todolist.data.model.Priority
+import com.sami.todolist.ui.components.RoundCheckBox
 import com.sami.todolist.ui.viewmodel.TaskFilter
 import com.sami.todolist.ui.viewmodel.TodoViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * 1:1 Parity with:
+ * - wear_tasklist_activity.xml
+ * - wear_tasklist_item.xml (54dp #1A1A1A card, 8dp radius)
+ * - wear_tasklist_item_label.xml (Category label + arrow)
+ * - wear_tasklist_item_completed.xml ("Check all completed tasks" toggle)
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainTaskListScreen(
@@ -42,61 +49,77 @@ fun MainTaskListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val tasks by viewModel.filteredTasks.collectAsState()
+    val allTasks by viewModel.allTasks.collectAsState()
     val categories by viewModel.categories.collectAsState()
+
+    val completedCount = remember(allTasks) { allTasks.count { it.task.isCompleted } }
+
+    val activeCategoryName = remember(uiState.selectedCategoryId, categories) {
+        if (uiState.selectedCategoryId == null) "All Tasks"
+        else categories.find { it.id == uiState.selectedCategoryId }?.name ?: "Tasks"
+    }
 
     Scaffold(
         topBar = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .background(Color(0xFF121212))
+                    .padding(horizontal = 14.dp, vertical = 8.dp)
             ) {
-                // Search Bar
+                // Top Search Bar
                 OutlinedTextField(
                     value = uiState.searchQuery,
                     onValueChange = { viewModel.setSearchQuery(it) },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Search tasks...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                    placeholder = { Text("Search tasks…", color = Color(0xFF888888)) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = Color(0xFFAAAAAA)) },
                     trailingIcon = {
                         if (uiState.searchQuery.isNotEmpty()) {
                             IconButton(onClick = { viewModel.setSearchQuery("") }) {
-                                Icon(Icons.Default.Clear, contentDescription = "Clear")
+                                Icon(Icons.Default.Clear, contentDescription = "Clear", tint = Color(0xFFAAAAAA))
                             }
                         }
                     },
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(12.dp),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        unfocusedBorderColor = Color.Transparent
+                        focusedContainerColor = Color(0xFF1E1E1E),
+                        unfocusedContainerColor = Color(0xFF1E1E1E),
+                        focusedTextColor = Color(0xFFEBEBEB),
+                        unfocusedTextColor = Color(0xFFEBEBEB),
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedBorderColor = Color(0xFF3B82F6)
                     )
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Category Chips (Horizontal Scroll)
+                // Category Chips Horizontal Row
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(vertical = 4.dp)
+                    contentPadding = PaddingValues(vertical = 2.dp)
                 ) {
                     item {
                         FilterChip(
                             selected = uiState.selectedCategoryId == null,
                             onClick = { viewModel.selectCategory(null) },
-                            label = { Text("All Categories") },
-                            leadingIcon = if (uiState.selectedCategoryId == null) {
-                                { Icon(Icons.Default.Check, contentDescription = null, Modifier.size(16.dp)) }
-                            } else null
+                            label = { Text("All") },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Color(0xFF2563EB),
+                                selectedLabelColor = Color.White,
+                                containerColor = Color(0xFF1E1E1E),
+                                labelColor = Color(0xFFCCCCCC)
+                            ),
+                            border = null,
+                            shape = RoundedCornerShape(8.dp)
                         )
                     }
                     items(categories) { category ->
                         val color = try {
                             Color(android.graphics.Color.parseColor(category.colorHex))
                         } catch (e: Exception) {
-                            MaterialTheme.colorScheme.primary
+                            Color(0xFF3B82F6)
                         }
                         FilterChip(
                             selected = uiState.selectedCategoryId == category.id,
@@ -105,11 +128,19 @@ fun MainTaskListScreen(
                             leadingIcon = {
                                 Box(
                                     modifier = Modifier
-                                        .size(10.dp)
+                                        .size(8.dp)
                                         .clip(CircleShape)
                                         .background(color)
                                 )
-                            }
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = color.copy(alpha = 0.35f),
+                                selectedLabelColor = Color.White,
+                                containerColor = Color(0xFF1E1E1E),
+                                labelColor = Color(0xFFCCCCCC)
+                            ),
+                            border = null,
+                            shape = RoundedCornerShape(8.dp)
                         )
                     }
                 }
@@ -120,6 +151,7 @@ fun MainTaskListScreen(
                 TabRow(
                     selectedTabIndex = uiState.currentFilter.ordinal,
                     containerColor = Color.Transparent,
+                    contentColor = Color(0xFF3B82F6),
                     divider = {}
                 ) {
                     TaskFilter.entries.forEach { filter ->
@@ -129,7 +161,9 @@ fun MainTaskListScreen(
                             text = {
                                 Text(
                                     text = filter.title,
-                                    fontWeight = if (uiState.currentFilter == filter) FontWeight.Bold else FontWeight.Normal
+                                    fontSize = 13.sp,
+                                    fontWeight = if (uiState.currentFilter == filter) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (uiState.currentFilter == filter) Color(0xFF3B82F6) else Color(0xFF888888)
                                 )
                             }
                         )
@@ -140,109 +174,169 @@ fun MainTaskListScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddNewTask,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
+                containerColor = Color(0xFFDC2626),
+                contentColor = Color.White,
                 shape = CircleShape
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Task", modifier = Modifier.size(28.dp))
             }
-        }
+        },
+        containerColor = Color(0xFF0F0F0F)
     ) { paddingValues ->
-        if (tasks.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            // Category Header Label (wear_tasklist_item_label.xml)
+            item {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp, horizontal = 4.dp)
+                ) {
+                    Text(
+                        text = activeCategoryName,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFB3B3B3)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Icon(
-                        imageVector = Icons.Outlined.CheckCircle,
+                        Icons.Default.ArrowForwardIos,
                         contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "No tasks found",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "Tap + to create a new task",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        modifier = Modifier.size(12.dp),
+                        tint = Color(0xFF777777)
                     )
                 }
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
+
+            // Task Items
+            if (tasks.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Outlined.Checklist,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = Color(0xFF333333)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "No tasks found",
+                                fontSize = 14.sp,
+                                color = Color(0xFF777777)
+                            )
+                            Text(
+                                text = "Click + to create your task.",
+                                fontSize = 12.sp,
+                                color = Color(0xFF555555)
+                            )
+                        }
+                    }
+                }
+            } else {
                 items(tasks, key = { it.task.id }) { item ->
                     TaskCard(
                         item = item,
                         onToggleTask = { viewModel.toggleTaskCompletion(item) },
                         onToggleSubtask = { viewModel.toggleSubtaskCompletion(it) },
-                        onClick = { onEditTask(item) },
-                        onDelete = { viewModel.deleteTask(item.task.id) }
+                        onClick = { onEditTask(item) }
                     )
+                }
+            }
+
+            // Completed Tasks Banner (Replicating wear_tasklist_item_completed.xml)
+            if (completedCount > 0 && uiState.currentFilter != TaskFilter.COMPLETED) {
+                item {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFF1A1A1A))
+                            .clickable { viewModel.setFilter(TaskFilter.COMPLETED) }
+                            .padding(vertical = 10.dp, horizontal = 14.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.CheckCircleOutline,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = Color(0xFF9E9E9E)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Check completed tasks ($completedCount)",
+                                fontSize = 13.sp,
+                                color = Color(0xFF9E9E9E)
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
 
+/**
+ * 1:1 Parity with wear_tasklist_item.xml
+ * Dimensions: 54dp height, 8dp radius, #1A1A1A background
+ */
 @Composable
 fun TaskCard(
     item: TaskWithDetails,
     onToggleTask: () -> Unit,
     onToggleSubtask: (SubTaskEntity) -> Unit,
-    onClick: () -> Unit,
-    onDelete: () -> Unit
+    onClick: () -> Unit
 ) {
     val task = item.task
     var isExpanded by remember { mutableStateOf(false) }
     val priority = Priority.fromLevel(task.priority)
 
-    Card(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .clickable { onClick() },
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFF1A1A1A))
+            .clickable { onClick() }
+            .padding(horizontal = 10.dp, vertical = 9.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Task Checkbox
-                Checkbox(
+                // RoundCheckBox (24dp circular animated check)
+                RoundCheckBox(
                     checked = task.isCompleted,
                     onCheckedChange = { onToggleTask() },
-                    colors = CheckboxDefaults.colors(
-                        checkedColor = MaterialTheme.colorScheme.primary
-                    )
+                    size = 24.dp,
+                    checkedColor = Color(0xFF10B981),
+                    uncheckedBorderColor = Color(0xFF555555)
                 )
 
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(10.dp))
 
-                // Title & Category
+                // Title & notes
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = task.title,
-                        style = MaterialTheme.typography.titleMedium,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = if (task.isCompleted) Color(0xFF666666) else Color(0xFFEBEBEB),
                         textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
-                        color = if (task.isCompleted) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface,
-                        maxLines = 2,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
 
@@ -250,8 +344,8 @@ fun TaskCard(
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = task.notes,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 12.sp,
+                            color = Color(0xFF888888),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -262,128 +356,140 @@ fun TaskCard(
                 if (priority != Priority.NONE) {
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(priority.color.copy(alpha = 0.15f))
-                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(priority.color.copy(alpha = 0.2f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
                         Text(
                             text = priority.label,
                             color = priority.color,
-                            fontSize = 11.sp,
+                            fontSize = 10.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
                 }
             }
 
-            // Bottom Badges: Due Date & Category
+            // Bottom Meta Row (wear_tasklist_item.xml bottom icon indicators)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 48.dp, top = 4.dp),
+                    .padding(start = 34.dp, top = 5.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Due Date Chip
+                // Due Date / Time
                 if (task.dueDate != null) {
                     val dateFormat = SimpleDateFormat("MMM dd", Locale.getDefault())
-                    val dateString = dateFormat.format(Date(task.dueDate))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
+                    val dateStr = dateFormat.format(Date(task.dueDate))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             Icons.Outlined.CalendarToday,
                             contentDescription = null,
-                            modifier = Modifier.size(12.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                            modifier = Modifier.size(13.dp),
+                            tint = Color(0xFF3B82F6)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = dateString,
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(text = dateStr, fontSize = 11.sp, color = Color(0xFF9E9E9E))
                     }
                 }
 
-                // Category Badge
-                if (item.category != null) {
-                    val catColor = try {
-                        Color(android.graphics.Color.parseColor(item.category.colorHex))
-                    } catch (e: Exception) {
-                        MaterialTheme.colorScheme.primary
-                    }
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(catColor.copy(alpha = 0.15f))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = item.category.name,
-                            fontSize = 11.sp,
-                            color = catColor,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                // Reminder Bell
+                if (task.reminderOffsetMinutes != null) {
+                    Icon(
+                        Icons.Outlined.Notifications,
+                        contentDescription = "Reminder",
+                        modifier = Modifier.size(13.dp),
+                        tint = Color(0xFFFACC15)
+                    )
                 }
 
-                // Subtask Progress Counter
+                // Repeat Loop
+                if (task.repeatType != "NONE") {
+                    Icon(
+                        Icons.Outlined.Repeat,
+                        contentDescription = "Repeat",
+                        modifier = Modifier.size(13.dp),
+                        tint = Color(0xFF60A5FA)
+                    )
+                }
+
+                // Subtask checklist counter
                 if (item.subtasks.isNotEmpty()) {
-                    val completedCount = item.subtasks.count { it.isCompleted }
+                    val completed = item.subtasks.count { it.isCompleted }
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(Color(0xFF262626))
                             .clickable { isExpanded = !isExpanded }
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                            .padding(horizontal = 5.dp, vertical = 1.dp)
                     ) {
                         Icon(
                             Icons.Outlined.Checklist,
                             contentDescription = null,
                             modifier = Modifier.size(12.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = Color(0xFF10B981)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = "$completedCount/${item.subtasks.size}",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            text = "$completed/${item.subtasks.size}",
+                            fontSize = 10.sp,
+                            color = Color(0xFFCCCCCC)
+                        )
+                    }
+                }
+
+                // Category Tag
+                if (item.category != null) {
+                    val catColor = try {
+                        Color(android.graphics.Color.parseColor(item.category.colorHex))
+                    } catch (e: Exception) {
+                        Color(0xFF3B82F6)
+                    }
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(catColor.copy(alpha = 0.2f))
+                            .padding(horizontal = 5.dp, vertical = 1.dp)
+                    ) {
+                        Text(
+                            text = item.category.name,
+                            fontSize = 10.sp,
+                            color = catColor,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
             }
 
-            // Expandable Checklist / Subtasks
+            // Expandable Subtasks
             AnimatedVisibility(visible = isExpanded && item.subtasks.isNotEmpty()) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 48.dp, top = 8.dp)
+                        .padding(start = 34.dp, top = 8.dp)
                 ) {
                     item.subtasks.forEach { subtask ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 2.dp)
+                                .padding(vertical = 3.dp)
                         ) {
-                            Checkbox(
+                            RoundCheckBox(
                                 checked = subtask.isCompleted,
                                 onCheckedChange = { onToggleSubtask(subtask) },
-                                modifier = Modifier.size(24.dp)
+                                size = 18.dp,
+                                checkedColor = Color(0xFF10B981),
+                                uncheckedBorderColor = Color(0xFF555555)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = subtask.title,
-                                style = MaterialTheme.typography.bodyMedium,
+                                fontSize = 13.sp,
                                 textDecoration = if (subtask.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
-                                color = if (subtask.isCompleted) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
+                                color = if (subtask.isCompleted) Color(0xFF555555) else Color(0xFFCCCCCC)
                             )
                         }
                     }
