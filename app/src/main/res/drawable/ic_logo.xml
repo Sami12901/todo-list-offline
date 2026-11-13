@@ -1,0 +1,60 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer Squircle with Crimson Red Gradient -->
+    <path
+        android:pathData="M26,12 L82,12 C91.94,12 100,20.06 100,30 L100,78 C100,87.94 91.94,96 82,96 L26,96 C16.06,96 8,87.94 8,78 L8,30 C8,20.06 16.06,12 26,12 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:angle="315"
+                android:endColor="#991B1B"
+                android:startColor="#DC2626"
+                android:type="linear" />
+        </aapt:attr>
+    </path>
+
+    <!-- Subtle Inner Glow Card -->
+    <path
+        android:fillColor="#15FFFFFF"
+        android:pathData="M28,16 L80,16 C87.73,16 94,22.27 94,30 L94,78 C94,85.73 87.73,92 80,92 L28,92 C20.27,92 14,85.73 14,78 L14,30 C14,22.27 20.27,16 28,16 Z" />
+
+    <!-- Pure White Minimalist Checklist Tablet -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,26 L76,26 C80.42,26 84,29.58 84,34 L84,74 C84,78.42 80.42,82 76,82 L32,82 C27.58,82 24,78.42 24,74 L24,34 C24,29.58 27.58,26 32,26 Z" />
+
+    <!-- Top Metallic Clip -->
+    <path
+        android:fillColor="#1F2937"
+        android:pathData="M44,22 L64,22 C66.21,22 68,23.79 68,26 L68,30 C68,30.55 67.55,31 67,31 L41,31 C40.45,31 40,30.55 40,30 L40,26 C40,23.79 41.79,22 44,22 Z" />
+
+    <!-- First Row: Crisp Checkmark -->
+    <path
+        android:fillColor="#DC2626"
+        android:pathData="M33,43 L38,48 L48,38 C49.17,36.83 51.07,36.83 52.24,38 C53.41,39.17 53.41,41.07 52.24,42.24 L39.7,54.78 C38.53,55.95 36.63,55.95 35.46,54.78 L28.76,48.08 C27.59,46.91 27.59,45.01 28.76,43.84 C29.93,42.67 31.83,42.67 33,43 Z" />
+
+    <!-- First Row Text Bar -->
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M56,43 L74,43 C75.1,43 76,43.9 76,45 C76,46.1 75.1,47 74,47 L56,47 C54.9,47 54,46.1 54,45 C54,43.9 54.9,43 56,43 Z" />
+
+    <!-- Second Row: Active Task Checkbox -->
+    <path
+        android:fillColor="#EF4444"
+        android:pathData="M34,57 L44,57 C46.21,57 48,58.79 48,61 L48,67 C48,69.21 46.21,71 44,71 L34,71 C31.79,71 30,69.21 30,67 L30,61 C30,58.79 31.79,57 34,57 Z M34,60 C33.45,60 33,60.45 33,61 L33,67 C33,67.55 33.45,68 34,68 L44,68 C44.55,68 45,67.55 45,67 L45,61 C45,60.45 44.55,60 44,60 L34,60 Z" />
+
+    <!-- Second Row Text Bar -->
+    <path
+        android:fillColor="#334155"
+        android:pathData="M56,62 L74,62 C75.1,62 76,62.9 76,64 C76,65.1 75.1,66 74,66 L56,66 C54.9,66 54,65.1 54,64 C54,62.9 54.9,62 56,62 Z" />
+
+    <!-- Subtle Accent Indicator -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M72,28 A3,3 0 1,1 66,28 A3,3 0 1,1 72,28 Z" />
+
+</vector>
